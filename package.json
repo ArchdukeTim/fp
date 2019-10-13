@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "concurrently": "^5.0.0",
     "cookie-parser": "^1.4.4",
     "express": "latest",
     "express-session": "latest",
@@ -17,7 +18,8 @@
     "socket.io-client": "^2.3.0"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"node server.js\"",
+    "start": "node server.js",
+    "dev": "concurrently \"react-scripts start\" \"nodemon server.js --inspect\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

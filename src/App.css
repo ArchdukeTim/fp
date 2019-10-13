@@ -1,0 +1,340 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #282c34;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+#root {
+    height: 100%;
+}
+
+.App {
+    background-color: #282c34;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    align-items: center;
+}
+
+.App-logo {
+    height: 40vmin;
+}
+
+.App-header {
+    display: flex;
+    flex: 0 1 auto;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+    margin: 25px 0;
+}
+
+h1 {
+    text-align: center;
+    font-size: 75px;
+    margin-block-start: 0em;
+    margin-block-end: 0.11em;
+}
+
+.App-link {
+    color: #09d3ac;
+}
+
+
+.modal {
+    font-family: verdana, "Lucida Grande", arial, sans-serif;
+    font-size: x-large;
+}
+
+.menu-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 50%;
+}
+
+#menuName {
+    border: 2px solid;
+    color: white;
+    font-size: xx-large;
+    text-align: center;
+    padding: 0.5%;
+    margin-bottom: 5%;
+}
+
+.menu-body img {
+}
+
+.roleSelector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 5%;
+}
+
+.role {
+    border: 2px black solid;
+    font-size: xx-large;
+    color: white;
+    width: 50%;
+    text-align: center;
+    padding: 1% 0;
+    filter: brightness(25%);
+}
+
+.role:nth-child(-n+2) {
+    margin-bottom: 1%;
+}
+
+.role.red {
+    background-color: #ff6666;
+}
+
+.role.blue {
+    background-color: #4d79ff;
+}
+
+.role.selected,
+.role:enabled:active {
+    filter: none;
+}
+
+.role:disabled {
+    cursor: default;
+    background-color: gray;
+}
+
+.statusButtons {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.status {
+    color: black;
+    font-size: xx-large;
+    width: 40%;
+}
+
+.play:not(:disabled) {
+    background-color: limegreen;
+}
+
+.reset {
+    background-color: darkred;
+
+}
+
+.game {
+    flex: 1 1 auto;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.board {
+    margin-left: 5%;
+    width: 45%;
+    height: 70%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-between;
+}
+
+.card {
+    height: 17%;
+    border-radius: 10px;
+    border-width: 5px;
+    border-style: solid;
+    flex: 0 1 17%;
+    font-size: x-large;
+    min-width: 0;
+    overflow-wrap: break-word;
+    background-color: whitesmoke;
+}
+
+.card svg {
+    text-align: center;
+}
+
+.card.button:hover {
+    background-color: gray;
+    cursor: pointer;
+}
+
+.chat {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    align-items: center;
+    justify-content: space-between;
+    height: 70%;
+}
+
+.chat-container {
+    position: relative;
+    width: 70%;
+    height: 100%;
+    color: black;
+    background-color: whitesmoke;
+    padding: 2%;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.log {
+    overflow-y: scroll;
+    flex: 1 1 auto;
+}
+
+.hintSubmission {
+    padding-top: 2%;
+    display: flex;
+    flex-direction: row;
+    background: whitesmoke;
+    width: 100%;
+    border-top: 2px black solid;
+}
+
+input {
+    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+    border: medium none;
+    color: #4c4c4c;
+    font-size: x-large;
+    width: 50%;
+    padding-left: 5%;
+}
+
+.amountInput {
+    width: 50%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.amount {
+    text-align: center;
+    align-content: center;
+    width: 20%;
+    font-size: x-large;
+}
+
+.amount:hover {
+    cursor: pointer;
+    background: cornsilk;
+}
+
+.amount.disabled {
+    color: lightgray;
+    pointer-events: none;
+}
+
+.amount.disabled:hover {
+    cursor: default;
+    background: whitesmoke;
+}
+
+.msg {
+    resize: none;
+    width: 125px;
+}
+
+.btn {
+    width: 65px;
+}
+
+.btn:hover {
+    cursor: pointer;
+}
+
+.game-board {
+    float: left;
+    margin-left: 5%;
+}
+
+.status {
+    text-align: center;
+}
+
+.clue {
+    margin-left: 10px;
+}
+
+.spyImage {
+    float: right;
+    margin-right: 50px;
+    margin-left: 30px;
+    margin-bottom: 20px;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-header-menu {
+    font-size: 10vh;
+    text-align: center;
+    display: block;
+    color: white;
+    margin-top: 0.7%;
+    margin-bottom: 2%;
+}
+
+.modal-body-menu {
+    text-align: center;
+}
+
+.modalButton {
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: bold;
+    background-color: white;
+}
+
+.modalButton:hover {
+    cursor: pointer;
+}
+
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+#yourTeam {
+    margin-bottom: 65px;
+    text-align: center;
+    padding: 5px;
+}
+
+
+.disabled-events {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.Reset {
+    font-size: x-large;
+    padding: 0.5%;
+    width: 40%;
+    border-radius: 8px;
+}
+
+.test1 {
+    text-align: center;
+    margin-bottom: 1.5%;
+}

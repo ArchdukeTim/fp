@@ -3,16 +3,14 @@ import Modal from "react-modal";
 import shortid from "shortid";
 import "./App.css";
 
-import socketIOClient from "socket.io-client";
-import {SSL_OP_SINGLE_DH_USE} from "constants";
+import io from "socket.io-client";
 
-const socket = socketIOClient(`${window.location.hostname}:${process.env.PORT || 8080}`);
+const socket = io();
 
 const RED = "#ff6666";
 const BLU = "#4d79ff";
 //would normally come from database but this is for testing
 //list of ALL words
-let allReady = false;
 let allWords = [
   "wall",
   "back",
@@ -205,7 +203,7 @@ class Menu extends React.Component {
                   >
                     Play
                   </button>
-                  <button className="status reset" onClick={() => resetMenu(this)}>
+                  <button className="status reset">
                     Reset
                   </button>
                 </div>
@@ -314,7 +312,7 @@ class Card extends React.Component {
     return (
       <div className="button card" style={{backgroundColor: this.props.revealedColor, borderColor: this.props.border}} onClick={() => socket.emit("guessed", this.props.value)} >
         <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 80">
-          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black">{this.props.value}</text>
+          <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="black">{this.props.value}</text>
         </svg>
       </div>
     );
@@ -457,79 +455,6 @@ class Game extends React.Component {
   }
 }
 
-function makeGray(btn, selected) {
-  let redspy = document.getElementById("rspymaster");
-  let reddet = document.getElementById("rdetective");
-  let bluespy = document.getElementById("bspymaster");
-  let bluedet = document.getElementById("bdetective");
-  bluespy.disabled = true;
-  redspy.disabled = true;
-  reddet.disabled = true;
-  bluedet.disabled = true;
-
-  let b = document.getElementById(btn);
-  let teamColor = b.style.backgroundColor;
-  let roleData = b.innerHTML.split("Team");
-  b.style.backgroundColor = "gray";
-  b.style.borderColor = "gold";
-  selected.state.selectedRole = btn;
-  selected.selectRole(btn);
-
-  let nameInput = document.getElementById("menuName");
-  let name = nameInput.value || selected.state.selectedRole;
-  nameInput.disabled = true;
-  sessionStorage.setItem("userInfo", name);
-  socket.emit("roleSelection", selected.state.selectedRole, name);
-
-  let whoYouAre = document.getElementById("yourTeam");
-  console.log(teamColor);
-  whoYouAre.style.backgroundColor = getColor(roleData[0]);
-  whoYouAre.innerHTML = name + " (<i>" + roleData[1] + "</i> )";
-}
-
-function getColor(color) {
-  if (color === "Blue ") {
-    console.log("blue");
-    return BLU;
-  } else {
-    return RED;
-  }
-}
-
-function resetMenu(play) {
-  let redspy = document.getElementById("rspymaster");
-  let reddet = document.getElementById("rdetective");
-  let bluespy = document.getElementById("bspymaster");
-  let bluedet = document.getElementById("bdetective");
-  redspy.style.backgroundColor = "#ff6666";
-  redspy.style.borderColor = "black";
-  redspy.disabled = false;
-  bluespy.style.backgroundColor = "#4d79ff";
-  bluespy.style.borderColor = "black";
-  bluespy.disabled = false;
-  reddet.style.backgroundColor = "#ff6666";
-  reddet.style.borderColor = "black";
-  reddet.disabled = false;
-  bluedet.style.backgroundColor = "#4d79ff";
-  bluedet.style.borderColor = "black";
-  bluedet.disabled = false;
-
-  socket.emit("resetRoles");
-}
-
-function closeMenu(play) {
-  let u = document.getElementById("menuName");
-  let redspy = document.getElementById("rspymaster");
-  let reddet = document.getElementById("rdetective");
-  let bluespy = document.getElementById("bspymaster");
-  let bluedet = document.getElementById("bdetective");
-  let username = u.value;
-  if (allReady) {
-    play.closeModal();
-    socket.emit("startGame");
-  }
-}
-
 //takes full list of words and picks 25 unique for a game
 function setBoard(order) {
   let cards = [];
@@ -588,75 +513,8 @@ function setBoard(order) {
   return cards;
 }
 
-//send out message to set initial state if it hasnt already
-window.onload = function() {
-  console.log("the sessionstorage: ", sessionStorage.getItem("userInfo"));
-};
-
 function getBrowserData() {
   return {user: sessionStorage.getItem("userInfo") || "USER" + Math.random()};
 }
-
-function getBoardState() {
-  let cards = [];
-  let collectedCards = document.getElementsByClassName("card");
-  const NUM_CARDS_ROW = 5;
-  for (let i = 0; i < NUM_CARDS_ROW; i++) {
-    for (let j = 0; j < NUM_CARDS_ROW; j++) {
-      let selCard = collectedCards[i * NUM_CARDS_ROW + j];
-      if (selCard) {
-        cards[i * NUM_CARDS_ROW + j] = {
-          word: selCard.innerHTML,
-          revealedColor: selCard.style.backgroundColor,
-          borderColor: selCard.style.borderColor,
-        };
-      }
-    }
-  }
-  return cards;
-}
-
-socket.on("allSelectedStatus", function(status) {
-  if (status) {
-    allReady = true;
-    document.getElementById("playBtn").classList.add("good-to-go");
-  }
-});
-
-socket.on("updateRoleState", function(rs) {
-  for (let role in rs) {
-    if (rs.hasOwnProperty(role) && rs[role]) {
-      console.log("greying role", role);
-      let button = document.getElementById(role);
-      button.style.backgroundColor = "grey";
-      button.disabled = true;
-    }
-  }
-});
-
-socket.on("resetRoles", () => {
-  let redspy = document.getElementById("rspymaster");
-  let reddet = document.getElementById("rdetective");
-  let bluespy = document.getElementById("bspymaster");
-  let bluedet = document.getElementById("bdetective");
-
-  redspy.style.backgroundColor = "#ff6666";
-  redspy.style.borderColor = "black";
-  redspy.disabled = false;
-  bluespy.style.backgroundColor = "#4d79ff";
-  bluespy.style.borderColor = "black";
-  bluespy.disabled = false;
-  reddet.style.backgroundColor = "#ff6666";
-  reddet.style.borderColor = "black";
-  reddet.disabled = false;
-  bluedet.style.backgroundColor = "#4d79ff";
-  bluedet.style.borderColor = "black";
-  bluedet.disabled = false;
-
-  document.getElementById("menuName").disabled = false;
-
-  allReady = false;
-  document.getElementById("playBtn").classList.remove("good-to-go");
-});
 
 export default App;

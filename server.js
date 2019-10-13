@@ -11,9 +11,8 @@ const session = require("express-session")({
     saveUninitialized: true,
   }),
   sharedsession = require("express-socket.io-session");
-const socketio = require("socket.io");
-const io = socketio.listen(server);
-io.origins('*:*');
+const io = require("socket.io")(server);
+const port = process.env.PORT || 8080;
 const RED = "#ff6666";
 const BLU = "#4d79ff";
 io.use(sharedsession(session));
@@ -28,14 +27,6 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname,'build/index.html'));
 });
-
-
-app.applyPort = function(port) {
-  server.listen(port);
-  let message = "listening on port: " + port;
-  console.log(message);
-};
-app.applyPort(process.env.PORT || 8080);
 
 module.exports = app;
 
@@ -311,3 +302,5 @@ function getCurrentDate() {
     year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second
   );
 }
+
+server.listen(port);

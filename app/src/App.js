@@ -88,7 +88,7 @@ class App extends React.Component {
         )}
         <Game selectedRole={this.state.selectedRole}/>
         <div className="test1">
-          <button className="Reset" onClick={resetAll}>RESET</button>
+          <button className="Reset" onClick={() => socket.emit("resetAll")}>RESET</button>
         </div>
       </div>
     );
@@ -98,8 +98,8 @@ class App extends React.Component {
 Modal.setAppElement("#root");
 
 class Modals extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       modalIsOpen: false,
@@ -141,7 +141,7 @@ class Modals extends React.Component {
                   src="spy.png"
                   width="270"
                   height="333"
-                ></img>
+                />
                 <p>
                   On the board there are 25 tiles, each of which have the
                   codename of different secret agent. Each agent is either a
@@ -181,17 +181,10 @@ class Modals extends React.Component {
 class Card extends React.Component {
   constructor(props) {
     super(props);
-    this.changeStyle = this.changeStyle.bind(this);
     this.state = {
       word: this.props.word,
       borderColor: this.props.border,
     };
-  }
-
-  changeStyle(color) {
-    this.setState({
-      color: this.state.cardColor,
-    });
   }
 
   render() {
@@ -352,11 +345,22 @@ class Menu extends React.Component {
     this.selectRole = props.selectRole;
     this.state = {
       modalIsOpen: true,
+      username: '',
       selectedRole: null,
+      roleIsAvaiable: {
+        rspymaster: true,
+        rdetective: true,
+        bspymaster: true,
+        bdetective: true,
+      }
     };
 
     this.openModal = this.openModal.bind(this);
     this.closeModal = this.closeModal.bind(this);
+
+    socket.on("updatedRoles", function(roles, selectedRole) {
+      this.setState({roleIsAvailable: roles, selectedRole: selectedRole})
+    });
   }
 
   openModal() {
@@ -365,6 +369,10 @@ class Menu extends React.Component {
 
   closeModal() {
     this.setState({modalIsOpen: false});
+  }
+
+  selectRole(roleName) {
+    socket.emit("roleSelection", roleName, this.state.username);
   }
 
   render() {
@@ -387,49 +395,43 @@ class Menu extends React.Component {
                     placeholder="Username"
                     id="menuName"
                     autoComplete="off"
-                  ></input>
-                  <br/>
-                  <br/>
+                    onChange={(e) => this.setState({username: e.target.value})}
+                  />
                   <img
                     className="center"
                     src="detective.png"
                     alt="Trulli"
                     width="270"
                     height="333"
-                  ></img>
-                  <br/>
-                  <br/>
+                  />
                   <button
-                    className="redrole"
+                    className={"redrole" + (this.state.roleIsAvaiable.rspymaster ? '' : ' disabled')}
                     id="rspymaster"
-                    onClick={() => makeGray("rspymaster", this)}
+                    onClick={() => this.selectRole("rspymaster")}
                   >
                     Red Team Spymaster
                   </button>
                   <button
-                    className="bluerole"
+                    className={"bluerole" + (this.state.roleIsAvaiable.bspymaster ? '' : ' disabled')}
                     id="bspymaster"
-                    onClick={() => makeGray("bspymaster", this)}
+                    onClick={() =>this.selectRole("bspymaster")}
                   >
                     Blue Team Spymaster
                   </button>
-                  <br/>
                   <button
-                    className="redrole"
+                    className={"redrole" + (this.state.roleIsAvaiable.rdetective ? '' : ' disabled')}
                     id="rdetective"
-                    onClick={() => makeGray("rdetective", this)}
+                    onClick={() => this.selectRole("rdetective")}
                   >
                     Red Team Detective
                   </button>
                   <button
-                    className="bluerole"
+                    className={"bluerole" + (this.state.roleIsAvaiable.bdetective ? '' : ' disabled')}
                     id="bdetective"
-                    onClick={() => makeGray("bdetective", this)}
+                    onClick={() => this.selectRole("bdetective")}
                   >
                     Blue Team Detective
                   </button>
-                  <br/>
-                  <br/>
                   <button
                     id="playBtn"
                     className="play"
@@ -609,26 +611,7 @@ function getBoardState() {
   return cards;
 }
 
-function resetAll(){
-    socket.emit("resetAll");
-}
 
-socket.on("reset", ()=>{
-   window.location.reload();
-});
-
-socket.on("update hints", function(msg) {
-  let final_message = document.createElement("p");
-  final_message.innerHTML = msg;
-  document.getElementsByClassName("chat-container")[0].append(final_message);
-});
-
-socket.on("greyRole", function(role) {
-  let button = document.getElementById(role);
-  button.style.backgroundColor = "grey";
-  button.disabled = true;
-  socket.emit("allSelected");
-});
 
 socket.on("allSelectedStatus", function(status) {
   if (status) {

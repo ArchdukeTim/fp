@@ -13,6 +13,7 @@ const session = require("express-session")({
   sharedsession = require("express-socket.io-session");
 const socketio = require("socket.io");
 const io = socketio.listen(server);
+io.origins('*:*');
 const RED = "#ff6666";
 const BLU = "#4d79ff";
 io.use(sharedsession(session));
@@ -22,14 +23,19 @@ app.use(session);
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname,'build/index.html'));
+});
+
 
 app.applyPort = function(port) {
   server.listen(port);
   let message = "listening on port: " + port;
   console.log(message);
 };
-app.applyPort(8080);
+app.applyPort(process.env.PORT || 8080);
 
 module.exports = app;
 

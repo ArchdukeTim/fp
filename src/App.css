@@ -118,6 +118,7 @@ h1 {
   height: 100%;
   border-radius: 10px;
   border-width: 5px;
+  border-style: solid;
   flex: 0 1 17%;
   font-size: x-large;
   min-width: 0;

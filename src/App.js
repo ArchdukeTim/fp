@@ -6,7 +6,7 @@ import "./App.css";
 import socketIOClient from "socket.io-client";
 import {SSL_OP_SINGLE_DH_USE} from "constants";
 
-const socket = socketIOClient("localhost:8080");
+const socket = socketIOClient(`${window.location.hostname}:${process.env.PORT || 8080}`);
 
 const RED = "#ff6666";
 const BLU = "#4d79ff";
@@ -312,7 +312,7 @@ class Card extends React.Component {
 
   render() {
     return (
-      <div className="button card" onClick={() => socket.emit("guessed", this.props.value)} >
+      <div className="button card" style={{backgroundColor: this.props.revealedColor, borderColor: this.props.border}} onClick={() => socket.emit("guessed", this.props.value)} >
         <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 80">
           <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black">{this.props.value}</text>
         </svg>

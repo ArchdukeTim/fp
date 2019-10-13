@@ -56,21 +56,29 @@ class App extends React.Component {
     this.state = {
       modalOpen: true,
       selectedRole: "",
+      username: "",
+      roleIsAvailable: {
+        rspymaster: true,
+        rdetective: true,
+        bspymaster: true,
+        bdetective: true,
+      },
+
     };
 
     console.log("App");
     socket.on("closeModal", this.closeModal.bind(this));
-  }
-
-  componentDidMount() {
+    socket.on("updatedRoles", (roles, selectedRole) => {
+      this.setState({roleIsAvailable: roles, selectedRole: selectedRole});
+    });
   }
 
   closeModal() {
     this.setState({modalOpen: false});
   }
 
-  selectRole(role) {
-    this.setState({selectedRole: role});
+  selectRole(role, name) {
+    socket.emit("roleSelection", role, name);
   }
 
   render() {
@@ -79,16 +87,131 @@ class App extends React.Component {
         <header className="App-header">
           <div>
             <h1>Codenames</h1>
-            <div id ="yourTeam"></div>
+            <div id="yourTeam"></div>
           </div>
-          <Modals />
+          <Modals/>
         </header>
         {this.state.modalOpen && (
-          <Menu selectRole={this.selectRole.bind(this)}/>
+          <Menu selectRole={this.selectRole.bind(this)}
+                roleIsAvailable={this.state.roleIsAvailable}/>
         )}
         <Game selectedRole={this.state.selectedRole}/>
         <div className="test1">
-          <button className="Reset" onClick={() => socket.emit("resetAll")}>RESET</button>
+          <button className="Reset"
+                  onClick={() => socket.emit("resetAll")}>RESET
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
+class Menu extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.selectRole = props.selectRole;
+    this.state = {
+      modalIsOpen: true,
+      readyToPlay: false,
+    };
+
+    this.openModal = this.openModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    socket.on("allSelectedStatus", () => {
+      this.setState({readyToPlay: true});
+    });
+  }
+
+  openModal() {
+    this.setState({modalIsOpen: true});
+  }
+
+  closeModal() {
+    this.setState({modalIsOpen: false});
+  }
+
+  render() {
+    return (
+      <div className="codenames">
+        <div className="modal-menu">
+          <Modal
+            shouldCloseOnOverlayClick={false}
+            isOpen={this.state.modalIsOpen}
+            onRequestClose={this.closeModal}
+            style={{content: {backgroundColor: "#282c34", padding: 0}}}
+          >
+            <div id="myModal" className="modal">
+              <div className="modal-content">
+                <div className="modal-header-menu">
+                  <div>Codenames</div>
+                </div>
+                <div className="modal-body-menu">
+                  <input
+                    placeholder="Username"
+                    id="menuName"
+                    autoComplete="off"
+                    onChange={(e) => this.setState({username: e.target.value})}
+                  />
+                  <img
+                    className="center"
+                    src="detective.png"
+                    alt="Trulli"
+                    width="270"
+                    height="333"
+                  />
+                  <button
+                    className="role red"
+                    id="rspymaster"
+                    disabled={!this.props.roleIsAvailable.rspymaster}
+                    onClick={() => {
+                      this.selectRole("rspymaster", this.state.username);
+                    }}
+                  >
+                    Red Team Spymaster
+                  </button>
+                  <button
+                    className="role blue"
+                    id="bspymaster"
+                    disabled={!this.props.roleIsAvailable.bspymaster}
+                    onClick={() => this.selectRole("bspymaster",
+                      this.state.username)}
+                  >
+                    Blue Team Spymaster
+                  </button>
+                  <button
+                    className="role red"
+                    id="rdetective"
+                    disabled={!this.props.roleIsAvailable.rdetective}
+                    onClick={() => this.selectRole("rdetective",
+                      this.state.username)}
+                  >
+                    Red Team Detective
+                  </button>
+                  <button
+                    className="role blue"
+                    id="bdetective"
+                    disabled={!this.props.roleIsAvailable.bdetective}
+                    onClick={() => this.selectRole("bdetective",
+                      this.state.username)}
+                  >
+                    Blue Team Detective
+                  </button>
+                  <button
+                    id="playBtn"
+                    disabled={!this.state.readyToPlay}
+                    className="status play"
+                    onClick={() => socket.emit("startGame")}
+                  >
+                    Play
+                  </button>
+                  <button className="status reset" onClick={() => resetMenu(this)}>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Modal>
         </div>
       </div>
     );
@@ -189,18 +312,11 @@ class Card extends React.Component {
 
   render() {
     return (
-      <button
-        key={shortid.generate()}
-        className="button card"
-        style={{
-          backgroundColor: this.props.revealedColor,
-          borderStyle: SSL_OP_SINGLE_DH_USE,
-          borderColor: this.state.borderColor,
-        }}
-        onClick={() => socket.emit("guessed", this.props.value)}
-      >
-        {this.props.value}
-      </button>
+      <div className="button card" onClick={() => socket.emit("guessed", this.props.value)} >
+        <svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" viewBox="0 0 100 80">
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black">{this.props.value}</text>
+        </svg>
+      </div>
     );
   }
 }
@@ -330,133 +446,22 @@ class Game extends React.Component {
     return (
       <div className={"game" + (this.state.disabled ? " disabled-events" : "")}>
         <Board cards={this.state.cards}/>
-        <Chat role={this.props.selectedRole}  wordsLeft={this.props.selectedRole.startsWith('r') ? this.state.redLeft : this.state.bluLeft}/>
+        <Chat role={this.props.selectedRole}
+              wordsLeft={this.props.selectedRole.startsWith("r") ?
+                this.state.redLeft :
+                this.state.bluLeft}/>
         <br/>
         <br/>
-      </div>
-    );
-  }
-}
-
-class Menu extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.selectRole = props.selectRole;
-    this.state = {
-      modalIsOpen: true,
-      username: '',
-      selectedRole: null,
-      roleIsAvaiable: {
-        rspymaster: true,
-        rdetective: true,
-        bspymaster: true,
-        bdetective: true,
-      }
-    };
-
-    this.openModal = this.openModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-
-    socket.on("updatedRoles", function(roles, selectedRole) {
-      this.setState({roleIsAvailable: roles, selectedRole: selectedRole})
-    });
-  }
-
-  openModal() {
-    this.setState({modalIsOpen: true});
-  }
-
-  closeModal() {
-    this.setState({modalIsOpen: false});
-  }
-
-  selectRole(roleName) {
-    socket.emit("roleSelection", roleName, this.state.username);
-  }
-
-  render() {
-    return (
-      <div className="codenames">
-        <div className="modal-menu">
-          <Modal
-            shouldCloseOnOverlayClick={false}
-            isOpen={this.state.modalIsOpen}
-            onRequestClose={this.closeModal}
-            style={{content: {backgroundColor: "#282c34", padding: 0}}}
-          >
-            <div id="myModal" className="modal">
-              <div className="modal-content">
-                <div className="modal-header-menu">
-                  <div>Codenames</div>
-                </div>
-                <div className="modal-body-menu">
-                  <input
-                    placeholder="Username"
-                    id="menuName"
-                    autoComplete="off"
-                    onChange={(e) => this.setState({username: e.target.value})}
-                  />
-                  <img
-                    className="center"
-                    src="detective.png"
-                    alt="Trulli"
-                    width="270"
-                    height="333"
-                  />
-                  <button
-                    className={"redrole" + (this.state.roleIsAvaiable.rspymaster ? '' : ' disabled')}
-                    id="rspymaster"
-                    onClick={() => this.selectRole("rspymaster")}
-                  >
-                    Red Team Spymaster
-                  </button>
-                  <button
-                    className={"bluerole" + (this.state.roleIsAvaiable.bspymaster ? '' : ' disabled')}
-                    id="bspymaster"
-                    onClick={() =>this.selectRole("bspymaster")}
-                  >
-                    Blue Team Spymaster
-                  </button>
-                  <button
-                    className={"redrole" + (this.state.roleIsAvaiable.rdetective ? '' : ' disabled')}
-                    id="rdetective"
-                    onClick={() => this.selectRole("rdetective")}
-                  >
-                    Red Team Detective
-                  </button>
-                  <button
-                    className={"bluerole" + (this.state.roleIsAvaiable.bdetective ? '' : ' disabled')}
-                    id="bdetective"
-                    onClick={() => this.selectRole("bdetective")}
-                  >
-                    Blue Team Detective
-                  </button>
-                  <button
-                    id="playBtn"
-                    className="play"
-                    onClick={() => closeMenu(this)}
-                  >
-                    Play
-                  </button>
-                  <button className="play" onClick={() => resetMenu(this)}>
-                    Reset
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Modal>
-        </div>
       </div>
     );
   }
 }
 
 function makeGray(btn, selected) {
-  var redspy = document.getElementById("rspymaster");
-  var reddet = document.getElementById("rdetective");
-  var bluespy = document.getElementById("bspymaster");
-  var bluedet = document.getElementById("bdetective");
+  let redspy = document.getElementById("rspymaster");
+  let reddet = document.getElementById("rdetective");
+  let bluespy = document.getElementById("bspymaster");
+  let bluedet = document.getElementById("bdetective");
   bluespy.disabled = true;
   redspy.disabled = true;
   reddet.disabled = true;
@@ -482,20 +487,20 @@ function makeGray(btn, selected) {
   whoYouAre.innerHTML = name + " (<i>" + roleData[1] + "</i> )";
 }
 
-function getColor(color){
-  if(color === "Blue "){
-    console.log('blue');
+function getColor(color) {
+  if (color === "Blue ") {
+    console.log("blue");
     return BLU;
-  }else{
+  } else {
     return RED;
   }
 }
 
 function resetMenu(play) {
-  var redspy = document.getElementById("rspymaster");
-  var reddet = document.getElementById("rdetective");
-  var bluespy = document.getElementById("bspymaster");
-  var bluedet = document.getElementById("bdetective");
+  let redspy = document.getElementById("rspymaster");
+  let reddet = document.getElementById("rdetective");
+  let bluespy = document.getElementById("bspymaster");
+  let bluedet = document.getElementById("bdetective");
   redspy.style.backgroundColor = "#ff6666";
   redspy.style.borderColor = "black";
   redspy.disabled = false;
@@ -513,12 +518,12 @@ function resetMenu(play) {
 }
 
 function closeMenu(play) {
-  var u = document.getElementById("menuName");
-  var redspy = document.getElementById("rspymaster");
-  var reddet = document.getElementById("rdetective");
-  var bluespy = document.getElementById("bspymaster");
-  var bluedet = document.getElementById("bdetective");
-  var username = u.value;
+  let u = document.getElementById("menuName");
+  let redspy = document.getElementById("rspymaster");
+  let reddet = document.getElementById("rdetective");
+  let bluespy = document.getElementById("bspymaster");
+  let bluedet = document.getElementById("bdetective");
+  let username = u.value;
   if (allReady) {
     play.closeModal();
     socket.emit("startGame");
@@ -611,12 +616,10 @@ function getBoardState() {
   return cards;
 }
 
-
-
 socket.on("allSelectedStatus", function(status) {
   if (status) {
     allReady = true;
-    document.getElementById("playBtn").classList.add('good-to-go');
+    document.getElementById("playBtn").classList.add("good-to-go");
   }
 });
 
@@ -632,10 +635,10 @@ socket.on("updateRoleState", function(rs) {
 });
 
 socket.on("resetRoles", () => {
-  var redspy = document.getElementById("rspymaster");
-  var reddet = document.getElementById("rdetective");
-  var bluespy = document.getElementById("bspymaster");
-  var bluedet = document.getElementById("bdetective");
+  let redspy = document.getElementById("rspymaster");
+  let reddet = document.getElementById("rdetective");
+  let bluespy = document.getElementById("bspymaster");
+  let bluedet = document.getElementById("bdetective");
 
   redspy.style.backgroundColor = "#ff6666";
   redspy.style.borderColor = "black";
@@ -653,7 +656,7 @@ socket.on("resetRoles", () => {
   document.getElementById("menuName").disabled = false;
 
   allReady = false;
-  document.getElementById("playBtn").classList.remove('good-to-go');
+  document.getElementById("playBtn").classList.remove("good-to-go");
 });
 
 export default App;

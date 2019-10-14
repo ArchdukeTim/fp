@@ -2,6 +2,7 @@ import React from "react";
 import Modal from "react-modal";
 import shortid from "shortid";
 import "./App.css";
+import "./Responsive.css"
 
 import io from "socket.io-client";
 
@@ -324,7 +325,7 @@ class Chat extends React.Component {
 
   render() {
     return (
-      <div className="chat">
+      <div className="chat col-xs-12">
         <div className="chat-container">
           <div className="log">
             {this.state.log.map((hint, index) => {
@@ -367,7 +368,7 @@ class Board extends React.Component {
 
   render() {
     return (
-      <div key={shortid.generate()} className="board">
+      <div key={shortid.generate()} className="board col-xs-12">
         {this.props.cards.map(card => {
           return this.renderCard(card);
         })}
